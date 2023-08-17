@@ -2,7 +2,9 @@ from collections import namedtuple
 import altair as alt
 import math
 import pandas as pd
+import openai
 import streamlit as st
+
 
 """
 # Welcome to Streamlit!
@@ -16,32 +18,40 @@ In the meantime, below is an example of what you can do with just a few lines of
 """
 
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+st.title("GA/GTM FAQ Bot")
 
-    Point = namedtuple('Point', 'x y')
-    data = []
+openai.api_key = st.secrets["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"]
 
-    points_per_turn = total_points / num_turns
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-3.5-turbo"
 
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
+if prompt := st.chat_input("What is up?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-# Insert a chat message container.
-with st.chat_message("user"):
-   st.write("Hello 👋")
-   st.line_chart(np.random.randn(30, 3))
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+        for response in openai.ChatCompletion.create(
+            model=st.session_state["openai_model"],
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
+            stream=True,
+        ):
+            full_response += response.choices[0].delta.get("content", "")
+            message_placeholder.markdown(full_response + "▌")
+        message_placeholder.markdown(full_response)
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 # Display a chat input widget.
 st.chat_input("Say something")
