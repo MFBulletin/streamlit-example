@@ -36,3 +36,12 @@ with st.echo(code_location='below'):
     st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
         .mark_circle(color='#0068c9', opacity=0.5)
         .encode(x='x:Q', y='y:Q'))
+
+
+# Insert a chat message container.
+>>> with st.chat_message("user"):
+>>>    st.write("Hello 👋")
+>>>    st.line_chart(np.random.randn(30, 3))
+
+# Display a chat input widget.
+>>> st.chat_input("Say something")
