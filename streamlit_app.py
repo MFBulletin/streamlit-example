@@ -20,7 +20,7 @@ In the meantime, below is an example of what you can do with just a few lines of
 
 st.title("GA/GTM FAQ Bot")
 
-openai.api_key = st.secrets["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"]
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
